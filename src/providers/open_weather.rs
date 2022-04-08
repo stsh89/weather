@@ -1,9 +1,10 @@
 use super::provider::{Error, Provider};
 use crate::forecast::Weather;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize, Serialize, Debug)]
 pub struct OpenWeather {
-    pub appid: String,
+    pub appid: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -38,5 +39,9 @@ impl Provider for OpenWeather {
             },
             Err(_error) => Err(Error::Unknown),
         }
+    }
+
+    fn valid(&self) -> bool {
+        self.appid.is_some()
     }
 }
