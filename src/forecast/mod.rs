@@ -11,7 +11,7 @@ pub enum Error {
 }
 
 pub fn show(provider: Box<dyn Provider>, request: Request) -> Result<Weather, Error> {
-    let result = provider.get(request.latitude, request.longitude);
+    let result = provider.provide(request.latitude, request.longitude);
 
     match result {
         Ok(weather) => Ok(weather),

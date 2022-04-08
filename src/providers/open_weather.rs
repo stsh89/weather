@@ -17,7 +17,7 @@ struct Response {
 }
 
 impl Provider for OpenWeather {
-    fn get(&self, latitude: f64, longitude: f64) -> Result<Weather, Error> {
+    fn provide(&self, latitude: f64, longitude: f64) -> Result<Weather, Error> {
         let client = reqwest::blocking::Client::new();
         let result = client
             .get("https://api.openweathermap.org/data/2.5/weather")

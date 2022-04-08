@@ -4,7 +4,7 @@ use crate::forecast::Weather;
 pub struct DummyProvider;
 
 impl Provider for DummyProvider {
-    fn get(&self, latitude: f64, longitude: f64) -> Result<Weather, Error> {
+    fn provide(&self, latitude: f64, longitude: f64) -> Result<Weather, Error> {
         if latitude == 0.0 && longitude == 0.0 {
             return Err(Error::Unknown);
         }

@@ -5,5 +5,5 @@ pub enum Error {
 }
 
 pub trait Provider {
-    fn get(&self, latitude: f64, longitude: f64) -> Result<Weather, Error>;
+    fn provide(&self, latitude: f64, longitude: f64) -> Result<Weather, Error>;
 }
