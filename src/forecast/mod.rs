@@ -1,30 +1,26 @@
+mod forecast_error;
 mod request;
 mod weather;
 
-use crate::providers::{Error as ProviderError, Provider};
+use crate::providers::{Provider, ProviderError};
+pub use forecast_error::ForecastError;
 pub use request::Request;
 pub use weather::Weather;
 
-#[derive(Debug)]
-pub enum Error {
-    Unknown,
-}
-
-pub fn show(provider: Box<dyn Provider>, request: Request) -> Result<Weather, Error> {
+pub fn show(provider: Box<dyn Provider>, request: Request) -> Result<Weather, ForecastError> {
     let result = provider.provide(request.latitude, request.longitude);
 
     match result {
         Ok(weather) => Ok(weather),
-        Err(ProviderError::Unknown) => Err(Error::Unknown),
-        Err(ProviderError::InvalidConfiguration) => Err(Error::Unknown),
+        Err(ProviderError::Unknown) => Err(ForecastError::Unknown),
+        Err(ProviderError::InvalidConfiguration) => Err(ForecastError::ProviderIsNotValid),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::show;
-    use crate::forecast::{Error, Request, Weather};
-    use crate::providers::{DummyProvider, Provider};
+    use super::*;
+    use crate::providers::DummyProvider;
 
     #[test]
     fn it_returns_unknown_error() {
@@ -33,17 +29,16 @@ mod tests {
             latitude: 0.0,
             longitude: 0.0,
         };
-        assert_eq!(provider.valid(), true);
         let result = show(Box::new(provider), request);
 
         match result {
-            Ok(_) => unreachable!(),
-            Err(Error::Unknown) => {}
+            Err(ForecastError::Unknown) => {}
+            _ => unreachable!(),
         }
     }
 
     #[test]
-    fn it_returns_invalid_configuration_error() {
+    fn it_returns_provider_is_not_valid_error() {
         let provider = DummyProvider {
             latitude: None,
             longitude: None,
@@ -53,12 +48,11 @@ mod tests {
             longitude: 0.0,
         };
 
-        assert_eq!(provider.valid(), false);
         let result = show(Box::new(provider), request);
 
         match result {
-            Ok(_) => unreachable!(),
-            Err(Error::Unknown) => {}
+            Err(ForecastError::ProviderIsNotValid) => {}
+            _ => unreachable!(),
         }
     }
 

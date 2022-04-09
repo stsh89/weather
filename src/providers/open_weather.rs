@@ -1,4 +1,5 @@
-use super::provider::{Error, Provider};
+use super::Provider;
+use super::ProviderError;
 use crate::forecast::Weather;
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +19,11 @@ struct Response {
 }
 
 impl Provider for OpenWeather {
-    fn provide(&self, latitude: f64, longitude: f64) -> Result<Weather, Error> {
+    fn provide(&self, latitude: f64, longitude: f64) -> Result<Weather, ProviderError> {
+        if !self.is_valid() {
+            return Err(ProviderError::InvalidConfiguration);
+        }
+
         let client = reqwest::blocking::Client::new();
         let result = client
             .get("https://api.openweathermap.org/data/2.5/weather")
@@ -33,15 +38,15 @@ impl Provider for OpenWeather {
                     Ok(json) => Ok(Weather {
                         temperature: json.main.temp,
                     }),
-                    Err(_error) => Err(Error::Unknown),
+                    Err(_error) => Err(ProviderError::Unknown),
                 },
-                _ => Err(Error::Unknown),
+                _ => Err(ProviderError::Unknown),
             },
-            Err(_error) => Err(Error::Unknown),
+            Err(_error) => Err(ProviderError::Unknown),
         }
     }
 
-    fn valid(&self) -> bool {
+    fn is_valid(&self) -> bool {
         self.appid.is_some()
     }
 }

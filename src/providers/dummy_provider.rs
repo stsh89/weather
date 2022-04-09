@@ -1,6 +1,9 @@
-use super::provider::{Error, Provider};
-use crate::forecast::Weather;
 use serde::{Deserialize, Serialize};
+
+use crate::forecast::Weather;
+
+use super::Provider;
+use super::ProviderError;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct DummyProvider {
@@ -9,13 +12,13 @@ pub struct DummyProvider {
 }
 
 impl Provider for DummyProvider {
-    fn provide(&self, latitude: f64, longitude: f64) -> Result<Weather, Error> {
-        if !self.valid() {
-            return Err(Error::InvalidConfiguration);
+    fn provide(&self, latitude: f64, longitude: f64) -> Result<Weather, ProviderError> {
+        if !self.is_valid() {
+            return Err(ProviderError::InvalidConfiguration);
         }
 
         if latitude == 0.0 && longitude == 0.0 {
-            return Err(Error::Unknown);
+            return Err(ProviderError::Unknown);
         }
 
         if latitude == 0.1 && longitude == 0.1 {
@@ -25,7 +28,7 @@ impl Provider for DummyProvider {
         Ok(Weather { temperature: 10.22 })
     }
 
-    fn valid(&self) -> bool {
+    fn is_valid(&self) -> bool {
         matches!((self.latitude, self.longitude), (Some(_), Some(_)))
     }
 }
