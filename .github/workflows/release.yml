@@ -3,9 +3,9 @@ name: Create Release Draft
 on:
   workflow_dispatch:
   push:
-    branches:
-      - github-workflow
-    # tags: ["[0-9]+.[0-9]+.[0-9]+*"]
+    # branches:
+      # - github-workflow
+    tags: ["[0-9]+.[0-9]+.[0-9]+*"]
 
 jobs:
   linux:
@@ -78,65 +78,65 @@ jobs:
           name: macos
           path: output/*
 
-  windows:
-    name: Build Windows
-    runs-on: windows-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Set up cargo
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - name: Add cargo-wix subcommand
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-wix --version 0.3.1
-
-      - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release
-
-      - name: Create output directory
-        run: mkdir output
-
-      - name: Download Less Binary
-        run: Invoke-WebRequest -Uri "https://github.com/jftuga/less-Windows/releases/download/less-v562.0/less.exe" -OutFile "target\release\less.exe"
-
-      - name: Download Less License
-        run: Invoke-WebRequest -Uri "https://raw.githubusercontent.com/jftuga/less-Windows/master/LICENSE" -OutFile "target\release\LICENSE-for-less.txt"
-
-      - name: Copy files to output
-        run: |
-          cp target\release\weather.exe output\
-      # Note: If the version of `less.exe` needs to be changed, update this URL
-      # Similarly, if `less.exe` is checked into the repo, copy from the local path here
-      # moved this stuff down to create wix after we download less
-
-      - name: Create msi with wix
-        uses: actions-rs/cargo@v1
-        with:
-          command: wix
-          args: --no-build --nocapture --output target\wix\weather-windows.msi
-
-      - name: Upload installer
-        uses: actions/upload-artifact@v2
-        with:
-          name: windows-installer
-          path: target\wix\weather-windows.msi
-
-      - name: Upload zip
-        uses: actions/upload-artifact@v2
-        with:
-          name: windows-zip
-          path: output\*
+  # windows:
+  #   name: Build Windows
+  #   runs-on: windows-latest
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@v2
+  #
+  #     - name: Set up cargo
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         profile: minimal
+  #         toolchain: stable
+  #         override: true
+  #
+  #     - name: Add cargo-wix subcommand
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: install
+  #         args: cargo-wix --version 0.3.1
+  #
+  #     - name: Build
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: build
+  #         args: --release
+  #
+  #     - name: Create output directory
+  #       run: mkdir output
+  #
+  #     - name: Download Less Binary
+  #       run: Invoke-WebRequest -Uri "https://github.com/jftuga/less-Windows/releases/download/less-v562.0/less.exe" -OutFile "target\release\less.exe"
+  #
+  #     - name: Download Less License
+  #       run: Invoke-WebRequest -Uri "https://raw.githubusercontent.com/jftuga/less-Windows/master/LICENSE" -OutFile "target\release\LICENSE-for-less.txt"
+  #
+  #     - name: Copy files to output
+  #       run: |
+  #         cp target\release\weather.exe output\
+  #     # Note: If the version of `less.exe` needs to be changed, update this URL
+  #     # Similarly, if `less.exe` is checked into the repo, copy from the local path here
+  #     # moved this stuff down to create wix after we download less
+  #
+  #     - name: Create msi with wix
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: wix
+  #         args: --no-build --nocapture --output target\wix\weather-windows.msi
+  #
+  #     - name: Upload installer
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: windows-installer
+  #         path: target\wix\weather-windows.msi
+  #
+  #     - name: Upload zip
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: windows-zip
+  #         path: output\*
 
   release:
     name: Publish Release
@@ -144,7 +144,7 @@ jobs:
     needs:
       - linux
       - macos
-      - windows
+      # - windows
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -162,7 +162,7 @@ jobs:
           echo "::set-output name=version::${VERSION}"
           echo "::set-output name=linuxdir::weather_${MAJOR}_${MINOR}_${PATCH}_linux"
           echo "::set-output name=macosdir::weather_${MAJOR}_${MINOR}_${PATCH}_macOS"
-          echo "::set-output name=windowsdir::weather_${MAJOR}_${MINOR}_${PATCH}_windows"
+          # echo "::set-output name=windowsdir::weather_${MAJOR}_${MINOR}_${PATCH}_windows"
           echo "::set-output name=innerdir::weather-${VERSION}"
 
       - name: Create Release Draft
@@ -226,43 +226,43 @@ jobs:
           asset_name: ${{ steps.info.outputs.macosdir }}.zip
           asset_content_type: application/zip
 
-      - name: Create Windows Directory
-        run: mkdir -p ${{ steps.info.outputs.windowsdir }}/${{ steps.info.outputs.innerdir }}
-
-      - name: Download Windows zip
-        uses: actions/download-artifact@v2
-        with:
-          name: windows-zip
-          path: ${{ steps.info.outputs.windowsdir }}/${{ steps.info.outputs.innerdir }}
-
-      - name: Show Windows Artifacts
-        run: ls -la ${{ steps.info.outputs.windowsdir }}/${{ steps.info.outputs.innerdir }}
-
-      - name: Create macOS Archive
-        run: zip -r ${{ steps.info.outputs.windowsdir }}.zip ${{ steps.info.outputs.windowsdir }}
-
-      - name: Upload Windows zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ steps.info.outputs.windowsdir }}.zip
-          asset_name: ${{ steps.info.outputs.windowsdir }}.zip
-          asset_content_type: application/zip
-
-      - name: Download Windows installer
-        uses: actions/download-artifact@v2
-        with:
-          name: windows-installer
-          path: ./
-
-      - name: Upload Windows installer
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./weather-windows.msi
-          asset_name: ${{ steps.info.outputs.windowsdir }}.msi
-          asset_content_type: application/x-msi
+      # - name: Create Windows Directory
+      #   run: mkdir -p ${{ steps.info.outputs.windowsdir }}/${{ steps.info.outputs.innerdir }}
+      #
+      # - name: Download Windows zip
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: windows-zip
+      #     path: ${{ steps.info.outputs.windowsdir }}/${{ steps.info.outputs.innerdir }}
+      #
+      # - name: Show Windows Artifacts
+      #   run: ls -la ${{ steps.info.outputs.windowsdir }}/${{ steps.info.outputs.innerdir }}
+      #
+      # - name: Create macOS Archive
+      #   run: zip -r ${{ steps.info.outputs.windowsdir }}.zip ${{ steps.info.outputs.windowsdir }}
+      #
+      # - name: Upload Windows zip
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./${{ steps.info.outputs.windowsdir }}.zip
+      #     asset_name: ${{ steps.info.outputs.windowsdir }}.zip
+      #     asset_content_type: application/zip
+      #
+      # - name: Download Windows installer
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: windows-installer
+      #     path: ./
+      #
+      # - name: Upload Windows installer
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./weather-windows.msi
+      #     asset_name: ${{ steps.info.outputs.windowsdir }}.msi
+      #     asset_content_type: application/x-msi
