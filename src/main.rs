@@ -1,3 +1,7 @@
+mod cli;
+mod forecast;
+mod providers;
+
 fn main() {
-    println!("Hello, world!");
+    cli::run();
 }
