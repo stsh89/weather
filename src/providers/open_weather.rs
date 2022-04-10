@@ -29,6 +29,7 @@ impl Provider for OpenWeather {
             .get("https://api.openweathermap.org/data/2.5/weather")
             .query(&[("lat", latitude)])
             .query(&[("lon", longitude)])
+            .query(&[("units", "metric")])
             .query(&[("appid", &self.appid)])
             .send();
 

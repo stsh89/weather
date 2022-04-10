@@ -1,5 +1,6 @@
-pub enum GeoipError {
+pub enum GeocodeError {
     NotFound,
     NothingToGeocode,
+    UnauthorizedClient,
     Unknown,
 }

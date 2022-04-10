@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use super::GeoipError;
+use super::GeocodeError;
 
 #[derive(Deserialize)]
 pub struct ClientResponse {
@@ -9,5 +9,5 @@ pub struct ClientResponse {
 }
 
 pub trait Client {
-    fn search_by_address(&self, q: String) -> Result<ClientResponse, GeoipError>;
+    fn search_by_address(&self, q: String) -> Result<ClientResponse, GeocodeError>;
 }

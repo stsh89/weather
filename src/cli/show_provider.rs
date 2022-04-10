@@ -1,11 +1,14 @@
 use super::config::Config;
+use super::CliError;
 
-pub fn run(config: Config, name: &str) {
+pub fn run(config: Config, name: &str) -> Result<(), CliError> {
     match name {
         "dummy" => dummy_config(config),
         "open_weather" => open_weather_config(config),
-        _ => println!("Invalid provider name!"),
+        _ => return Err(CliError::InvalidProviderName),
     }
+
+    Ok(())
 }
 
 fn dummy_config(config: Config) {

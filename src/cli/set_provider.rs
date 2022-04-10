@@ -1,11 +1,12 @@
-use super::{Config, ProviderConfig};
+use super::{CliError, Config, ProviderConfig};
 
-pub fn run(mut config: Config, name: &str) {
+pub fn run(mut config: Config, name: &str) -> Result<(), CliError> {
     match ProviderConfig::try_from(name.to_string()) {
-        Err(_) => println!("Invalid provider name"),
+        Err(_) => Err(CliError::InvalidProviderName),
         _ => {
             config.current_provider = name.to_string();
             config.write();
+            Ok(())
         }
-    };
+    }
 }

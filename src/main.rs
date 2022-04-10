@@ -1,7 +1,7 @@
 mod cli;
 mod forecast;
+mod geocode;
 mod providers;
-mod geoip;
 
 fn main() {
     cli::run();
