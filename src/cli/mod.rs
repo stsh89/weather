@@ -54,11 +54,11 @@ pub fn run() {
 
     let result: Result<(), CliError> = match &cli.command {
         Commands::ListProviders {} => list_providers::run(),
-        Commands::ShowProvider { name } => show_provider::run(app.config, name),
+        Commands::ShowProvider { name } => show_provider::run(&app.config, name),
         Commands::SetProvider { name } => set_provider::run(app.config, name),
-        Commands::CurrentProvider {} => current_provider::run(app.config),
+        Commands::CurrentProvider {} => current_provider::run(&app.config),
         Commands::Configure { name } => configure_provider::run(app.config, name),
-        Commands::Get { address } => get_weather::run(app, address),
+        Commands::Get { address } => get_weather::run(&app, address),
     };
 
     match result {

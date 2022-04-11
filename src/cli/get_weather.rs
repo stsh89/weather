@@ -3,10 +3,11 @@ use crate::forecast;
 use crate::geocode::{search_by_address, Address, Client, GeocodeError, Point};
 use crate::providers::{DummyProvider, OpenWeather, Provider};
 
-pub fn run(app: CliApp, address_string: &str) -> Result<(), CliError> {
-    let provider: Box<dyn Provider> = match ProviderConfig::try_from(app.config.current_provider) {
-        Ok(ProviderConfig::DummyProviderConfig) => dummy_provider(app.config.providers.dummy),
-        Ok(ProviderConfig::OpenWeatherConfig) => open_weather(app.config.providers.open_weather),
+pub fn run(app: &CliApp, address_string: &str) -> Result<(), CliError> {
+    let current_provider: &str = &app.config.current_provider;
+    let provider: Box<dyn Provider> = match ProviderConfig::try_from(current_provider) {
+        Ok(ProviderConfig::DummyProviderConfig) => dummy_provider(&app.config.providers.dummy),
+        Ok(ProviderConfig::OpenWeatherConfig) => open_weather(&app.config.providers.open_weather),
         Err(_) => return Err(CliError::MissingCurrentProvider),
     };
 
@@ -15,7 +16,7 @@ pub fn run(app: CliApp, address_string: &str) -> Result<(), CliError> {
         Err(error) => return Err(error),
     };
 
-    let point: Point = match geocode_address(app.geocode_client, address) {
+    let point: Point = match geocode_address(&*app.geocode_client, &address) {
         Ok(point) => point,
         Err(GeocodeError::NotFound) => return Err(CliError::AddressNotFound),
         Err(GeocodeError::NothingToGeocode) => return Err(CliError::Unknown),
@@ -28,7 +29,7 @@ pub fn run(app: CliApp, address_string: &str) -> Result<(), CliError> {
         longitude: point.longitude,
     };
 
-    get_weather(provider, request)
+    get_weather(&*provider, &request)
 }
 
 fn parse_address(address_string: &str) -> Result<Address, CliError> {
@@ -49,29 +50,29 @@ fn parse_address(address_string: &str) -> Result<Address, CliError> {
     }
 
     Ok(Address {
-        city: Some(city.to_string()),
-        country_alpha_2_code: Some(country_alpha_2_code.to_string()),
+        city: city.to_string(),
+        country_alpha_2_code: country_alpha_2_code.to_string(),
     })
 }
 
-fn geocode_address(client: Box<dyn Client>, address: Address) -> Result<Point, GeocodeError> {
+fn geocode_address(client: &dyn Client, address: &Address) -> Result<Point, GeocodeError> {
     search_by_address(client, address)
 }
 
-fn dummy_provider(config: DummyProviderConfig) -> Box<dyn Provider> {
+fn dummy_provider(config: &DummyProviderConfig) -> Box<dyn Provider> {
     Box::new(DummyProvider {
         latitude: Some(config.latitude),
         longitude: Some(config.longitude),
     })
 }
 
-fn open_weather(config: OpenWeatherConfig) -> Box<dyn Provider> {
+fn open_weather(config: &OpenWeatherConfig) -> Box<dyn Provider> {
     Box::new(OpenWeather {
-        appid: Some(config.appid),
+        appid: Some(config.appid.clone()),
     })
 }
 
-fn get_weather(provider: Box<dyn Provider>, request: forecast::Request) -> Result<(), CliError> {
+fn get_weather(provider: &dyn Provider, request: &forecast::Request) -> Result<(), CliError> {
     let result = forecast::show(provider, request);
 
     match result {

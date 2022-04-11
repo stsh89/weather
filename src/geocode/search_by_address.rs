@@ -3,8 +3,8 @@ use super::Client;
 use super::GeocodeError;
 use super::Point;
 
-pub fn run(client: Box<dyn Client>, address: Address) -> Result<Point, GeocodeError> {
-    if !is_address_valid(&address) {
+pub fn run(client: &dyn Client, address: &Address) -> Result<Point, GeocodeError> {
+    if !is_address_valid(address) {
         return Err(GeocodeError::NothingToGeocode);
     }
 
@@ -20,18 +20,11 @@ pub fn run(client: Box<dyn Client>, address: Address) -> Result<Point, GeocodeEr
 }
 
 fn is_address_valid(address: &Address) -> bool {
-    matches!(
-        (&address.city, &address.country_alpha_2_code),
-        (Some(_), Some(_))
-    )
+    !address.city.is_empty() && !address.country_alpha_2_code.is_empty()
 }
 
-fn q(address: Address) -> String {
-    format!(
-        "{},{}",
-        address.city.unwrap(),
-        address.country_alpha_2_code.unwrap()
-    )
+fn q(address: &Address) -> String {
+    format!("{},{}", address.city, address.country_alpha_2_code)
 }
 
 #[cfg(test)]
@@ -41,14 +34,14 @@ mod tests {
 
     #[test]
     fn it_returns_nothing_to_geocode_error() {
-        let city = None;
-        let country_alpha_2_code = None;
-        let client = Box::new(DummyClient {});
+        let city = "".to_string();
+        let country_alpha_2_code = "".to_string();
+        let client = DummyClient {};
         let address = Address {
             city,
             country_alpha_2_code,
         };
-        let result = run(client, address);
+        let result = run(&client, &address);
 
         match result {
             Err(GeocodeError::NothingToGeocode) => {}
@@ -58,14 +51,14 @@ mod tests {
 
     #[test]
     fn it_returns_unknown_geocode_error() {
-        let city = Some("Paris".to_string());
-        let country_alpha_2_code = Some("US".to_string());
-        let client = Box::new(DummyClient {});
+        let city = "Paris".to_string();
+        let country_alpha_2_code = "US".to_string();
+        let client = DummyClient {};
         let address = Address {
             city,
             country_alpha_2_code,
         };
-        let result = run(client, address);
+        let result = run(&client, &address);
 
         match result {
             Err(GeocodeError::Unknown) => {}
@@ -75,14 +68,14 @@ mod tests {
 
     #[test]
     fn it_returns_not_found_geocode_error() {
-        let city = Some("Paris".to_string());
-        let country_alpha_2_code = Some("ZZ".to_string());
-        let client = Box::new(DummyClient {});
+        let city = "Paris".to_string();
+        let country_alpha_2_code = "ZZ".to_string();
+        let client = DummyClient {};
         let address = Address {
             city,
             country_alpha_2_code,
         };
-        let result = run(client, address);
+        let result = run(&client, &address);
 
         match result {
             Err(GeocodeError::NotFound) => {}
@@ -92,14 +85,14 @@ mod tests {
 
     #[test]
     fn it_returns_a_geocode_point() {
-        let city = Some("Paris".to_string());
-        let country_alpha_2_code = Some("FR".to_string());
-        let client = Box::new(DummyClient {});
+        let city = "Paris".to_string();
+        let country_alpha_2_code = "FR".to_string();
+        let client = DummyClient {};
         let address = Address {
             city,
             country_alpha_2_code,
         };
-        let result = run(client, address);
+        let result = run(&client, &address);
 
         match result {
             Ok(point) => {

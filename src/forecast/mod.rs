@@ -7,7 +7,7 @@ pub use forecast_error::ForecastError;
 pub use request::Request;
 pub use weather::Weather;
 
-pub fn show(provider: Box<dyn Provider>, request: Request) -> Result<Weather, ForecastError> {
+pub fn show(provider: &dyn Provider, request: &Request) -> Result<Weather, ForecastError> {
     let result = provider.provide(request.latitude, request.longitude);
 
     match result {
@@ -29,7 +29,7 @@ mod tests {
             latitude: 0.0,
             longitude: 0.0,
         };
-        let result = show(Box::new(provider), request);
+        let result = show(&provider, &request);
 
         match result {
             Err(ForecastError::Unknown) => {}
@@ -48,7 +48,7 @@ mod tests {
             longitude: 0.0,
         };
 
-        let result = show(Box::new(provider), request);
+        let result = show(&provider, &request);
 
         match result {
             Err(ForecastError::ProviderIsNotValid) => {}
@@ -58,11 +58,12 @@ mod tests {
 
     #[test]
     fn it_returns_weather() {
+        let provider = DummyProvider::default();
         let request = Request {
             latitude: 0.1,
             longitude: 0.1,
         };
-        let result = show(Box::new(DummyProvider::default()), request);
+        let result = show(&provider, &request);
         let want = Weather { temperature: 10.22 };
 
         match result {

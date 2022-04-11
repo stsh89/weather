@@ -2,14 +2,19 @@ use super::{CliError, Config, DummyProviderConfig, OpenWeatherConfig, ProviderCo
 use dialoguer::Input;
 
 pub fn run(config: Config, name: &str) -> Result<(), CliError> {
-    match ProviderConfig::try_from(name.to_string()) {
+    let result = match ProviderConfig::try_from(name) {
         Ok(ProviderConfig::DummyProviderConfig) => dummy_provider(config),
         Ok(ProviderConfig::OpenWeatherConfig) => open_weather(config),
-        Err(_) => Err(CliError::InvalidProviderName),
+        Err(_) => return Err(CliError::InvalidProviderName),
+    };
+
+    match result {
+        Ok(_) => Ok(()),
+        Err(error) => Err(error),
     }
 }
 
-fn dummy_provider(mut config: Config) -> Result<(), CliError> {
+fn dummy_provider(mut config: Config) -> Result<Config, CliError> {
     let latitude: f64 = Input::new()
         .with_prompt("latitude")
         .interact_text()
@@ -26,12 +31,12 @@ fn dummy_provider(mut config: Config) -> Result<(), CliError> {
     };
 
     config.write();
-    Ok(())
+    Ok(config)
 }
 
-fn open_weather(mut config: Config) -> Result<(), CliError> {
+fn open_weather(mut config: Config) -> Result<Config, CliError> {
     let appid: String = Input::new().with_prompt("appid").interact_text().unwrap();
     config.providers.open_weather = OpenWeatherConfig { appid };
     config.write();
-    Ok(())
+    Ok(config)
 }
