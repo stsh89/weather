@@ -15,7 +15,7 @@ mod tests {
     fn it_returns_unknown_error() {
         let provider = DummyProvider::default();
 
-        let result = run(&provider, "Paris,ZZ");
+        let result = run(&provider, "Paris,AA");
 
         match result {
             Err(ForecastError::Unknown) => {}
@@ -49,10 +49,7 @@ mod tests {
 
     #[test]
     fn it_returns_provider_is_not_valid_error() {
-        let provider = DummyProvider {
-            latitude: None,
-            longitude: None,
-        };
+        let provider = DummyProvider { is_valid: false };
 
         let result = run(&provider, "");
 

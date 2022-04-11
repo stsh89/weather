@@ -19,7 +19,7 @@ mod tests {
     fn it_returns_unknown_error() {
         let timestamp = 0;
         let provider = DummyProvider::default();
-        let result = run(&provider, "Paris,ZZ", timestamp);
+        let result = run(&provider, "Paris,AA", timestamp);
 
         match result {
             Err(ForecastError::Unknown) => {}
@@ -55,10 +55,7 @@ mod tests {
     #[test]
     fn it_returns_provider_is_not_valid_error() {
         let timestamp = 0;
-        let provider = DummyProvider {
-            latitude: None,
-            longitude: None,
-        };
+        let provider = DummyProvider { is_valid: false };
 
         let result = run(&provider, "", timestamp);
 

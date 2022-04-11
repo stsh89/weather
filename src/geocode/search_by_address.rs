@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn it_returns_not_found_geocode_error() {
         let city = "Paris".to_string();
-        let country_alpha_2_code = "ZZ".to_string();
+        let country_alpha_2_code = "AA".to_string();
         let client = DummyClient {};
         let address = Address {
             city,

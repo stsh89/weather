@@ -8,7 +8,7 @@ impl Client for DummyClient {
             return Err(GeocodeError::NothingToGeocode);
         }
 
-        if q == "Paris,ZZ" {
+        if q == "Paris,AA" {
             return Err(GeocodeError::NotFound);
         }
 

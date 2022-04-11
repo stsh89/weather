@@ -7,8 +7,7 @@ use super::ProviderError;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct DummyProvider {
-    pub latitude: Option<f64>,
-    pub longitude: Option<f64>,
+    pub is_valid: bool,
 }
 
 impl Provider for DummyProvider {
@@ -29,7 +28,7 @@ impl Provider for DummyProvider {
             return Err(ProviderError::Unauthorized);
         }
 
-        if address_string == "Paris,ZZ" {
+        if address_string == "Paris,AA" {
             return Err(ProviderError::Unknown);
         }
 
@@ -61,7 +60,7 @@ impl Provider for DummyProvider {
             return Err(ProviderError::Unauthorized);
         }
 
-        if address_string == "Paris,ZZ" {
+        if address_string == "Paris,AA" {
             return Err(ProviderError::Unknown);
         }
 
@@ -81,15 +80,12 @@ impl Provider for DummyProvider {
     }
 
     fn is_valid(&self) -> bool {
-        matches!((self.latitude, self.longitude), (Some(_), Some(_)))
+        self.is_valid
     }
 }
 
 impl Default for DummyProvider {
     fn default() -> Self {
-        Self {
-            latitude: Some(0.0),
-            longitude: Some(0.0),
-        }
+        Self { is_valid: true }
     }
 }
