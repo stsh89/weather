@@ -6,6 +6,5 @@ pub enum CliError {
     InvalidProviderName,
     MissingCurrentProvider,
     MissingRequestedDate,
-    UnauthorizedGeocodeClient,
     Unknown,
 }

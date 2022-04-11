@@ -12,41 +12,45 @@ pub struct DummyProvider {
 }
 
 impl Provider for DummyProvider {
-    fn current(&self, latitude: f64, longitude: f64) -> Result<Weather, ProviderError> {
+    fn current(&self, address_string: &str) -> Result<Weather, ProviderError> {
         if !self.is_valid() {
             return Err(ProviderError::InvalidConfiguration);
         }
 
-        if latitude == 0.0 && longitude == 0.0 {
+        if address_string == "Paris,ZZ" {
             return Err(ProviderError::Unknown);
         }
 
-        if latitude == 0.1 && longitude == 0.1 {
+        if address_string == "Paris,XX" {
+            return Err(ProviderError::NoMatchingLocationFound);
+        }
+
+        if address_string == "Paris,FR" {
             return Ok(Weather { temperature: 10.22 });
         }
 
         Ok(Weather { temperature: 10.22 })
     }
 
-    fn daily(
-        &self,
-        latitude: f64,
-        longitude: f64,
-        _timestamp: i64,
-    ) -> Result<Weather, ProviderError> {
+    fn daily(&self, address_string: &str, _timestamp: i64) -> Result<Weather, ProviderError> {
         if !self.is_valid() {
             return Err(ProviderError::InvalidConfiguration);
         }
-        if latitude == 0.0 && longitude == 0.0 {
+
+        if address_string == "Paris,ZZ" {
             return Err(ProviderError::Unknown);
         }
 
-        if latitude == 0.1 && longitude == 0.1 {
-            return Ok(Weather { temperature: 10.22 });
+        if address_string == "Paris,XX" {
+            return Err(ProviderError::NoMatchingLocationFound);
         }
 
-        if latitude == 0.2 && longitude == 0.2 {
+        if address_string == "Paris,YY" {
             return Err(ProviderError::MissingRequestedDate);
+        }
+
+        if address_string == "Paris,FR" {
+            return Ok(Weather { temperature: 10.22 });
         }
 
         Ok(Weather { temperature: 10.22 })

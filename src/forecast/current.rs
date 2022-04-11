@@ -1,8 +1,8 @@
-use super::{ForecastError, Request, Weather};
+use super::{ForecastError, Weather};
 use crate::providers::{Provider, ProviderError};
 
-pub fn run(provider: &dyn Provider, request: &Request) -> Result<Weather, ForecastError> {
-    let result = provider.current(request.latitude, request.longitude);
+pub fn run(provider: &dyn Provider, address_string: &str) -> Result<Weather, ForecastError> {
+    let result = provider.current(address_string);
 
     match result {
         Ok(weather) => Ok(weather),
@@ -20,11 +20,8 @@ mod tests {
     #[test]
     fn it_returns_unknown_error() {
         let provider = DummyProvider::default();
-        let request = Request {
-            latitude: 0.0,
-            longitude: 0.0,
-        };
-        let result = run(&provider, &request);
+
+        let result = run(&provider, "Paris,ZZ");
 
         match result {
             Err(ForecastError::Unknown) => {}
@@ -38,12 +35,8 @@ mod tests {
             latitude: None,
             longitude: None,
         };
-        let request = Request {
-            latitude: 0.0,
-            longitude: 0.0,
-        };
 
-        let result = run(&provider, &request);
+        let result = run(&provider, "");
 
         match result {
             Err(ForecastError::ProviderIsNotValid) => {}
@@ -54,11 +47,7 @@ mod tests {
     #[test]
     fn it_returns_weather() {
         let provider = DummyProvider::default();
-        let request = Request {
-            latitude: 0.1,
-            longitude: 0.1,
-        };
-        let result = run(&provider, &request);
+        let result = run(&provider, "Paris,FR");
         let want = Weather { temperature: 10.22 };
 
         match result {

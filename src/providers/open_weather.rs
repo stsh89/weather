@@ -3,11 +3,12 @@ use chrono::NaiveDateTime;
 use super::Provider;
 use super::ProviderError;
 use crate::forecast::Weather;
-use serde::{Deserialize, Serialize};
+use crate::geocode::{parse_address, search_by_address, Address, Client, GeocodeError, Point};
+use serde::Deserialize;
 
-#[derive(Deserialize, Serialize, Debug)]
 pub struct OpenWeather {
     pub appid: Option<String>,
+    pub geocode_client: Box<dyn Client>,
 }
 
 #[derive(Deserialize)]
@@ -37,16 +38,36 @@ struct DailyListResponse {
 }
 
 impl Provider for OpenWeather {
-    fn current(&self, latitude: f64, longitude: f64) -> Result<Weather, ProviderError> {
+    fn current(&self, address_string: &str) -> Result<Weather, ProviderError> {
         if !self.is_valid() {
             return Err(ProviderError::InvalidConfiguration);
         }
 
+        let address: Address = match parse_address(address_string) {
+            Ok(address) => address,
+            Err(GeocodeError::InvalidAddressFormat) => {
+                return Err(ProviderError::InvalidAddressFormat)
+            }
+            Err(GeocodeError::InvalidCountryCode) => return Err(ProviderError::InvalidCountryCode),
+            _ => return Err(ProviderError::Unknown),
+        };
+
+        let point: Point = match search_by_address(&*self.geocode_client, &address) {
+            Ok(point) => point,
+            Err(GeocodeError::NotFound) => return Err(ProviderError::NoMatchingLocationFound),
+            Err(GeocodeError::NothingToGeocode) => {
+                return Err(ProviderError::NoMatchingLocationFound)
+            }
+            Err(GeocodeError::Unknown) => return Err(ProviderError::Unknown),
+            Err(GeocodeError::UnauthorizedClient) => return Err(ProviderError::Unknown),
+            _ => return Err(ProviderError::Unknown),
+        };
+
         let client = reqwest::blocking::Client::new();
         let result = client
             .get("https://api.openweathermap.org/data/2.5/weather")
-            .query(&[("lat", latitude)])
-            .query(&[("lon", longitude)])
+            .query(&[("lat", point.latitude)])
+            .query(&[("lon", point.longitude)])
             .query(&[("units", "metric")])
             .query(&[("appid", &self.appid)])
             .send();
@@ -65,21 +86,36 @@ impl Provider for OpenWeather {
         }
     }
 
-    fn daily(
-        &self,
-        latitude: f64,
-        longitude: f64,
-        timestamp: i64,
-    ) -> Result<Weather, ProviderError> {
+    fn daily(&self, address_string: &str, timestamp: i64) -> Result<Weather, ProviderError> {
         if !self.is_valid() {
             return Err(ProviderError::InvalidConfiguration);
         }
 
+        let address: Address = match parse_address(address_string) {
+            Ok(address) => address,
+            Err(GeocodeError::InvalidAddressFormat) => {
+                return Err(ProviderError::InvalidAddressFormat)
+            }
+            Err(GeocodeError::InvalidCountryCode) => return Err(ProviderError::InvalidCountryCode),
+            _ => return Err(ProviderError::Unknown),
+        };
+
+        let point: Point = match search_by_address(&*self.geocode_client, &address) {
+            Ok(point) => point,
+            Err(GeocodeError::NotFound) => return Err(ProviderError::NoMatchingLocationFound),
+            Err(GeocodeError::NothingToGeocode) => {
+                return Err(ProviderError::NoMatchingLocationFound)
+            }
+            Err(GeocodeError::Unknown) => return Err(ProviderError::Unknown),
+            Err(GeocodeError::UnauthorizedClient) => return Err(ProviderError::Unknown),
+            _ => return Err(ProviderError::Unknown),
+        };
+
         let client = reqwest::blocking::Client::new();
         let result = client
             .get("https://api.openweathermap.org/data/2.5/onecall")
-            .query(&[("lat", latitude)])
-            .query(&[("lon", longitude)])
+            .query(&[("lat", point.latitude)])
+            .query(&[("lon", point.longitude)])
             .query(&[("units", "metric")])
             .query(&[("appid", &self.appid)])
             .send();
