@@ -17,6 +17,18 @@ impl Provider for DummyProvider {
             return Err(ProviderError::InvalidConfiguration);
         }
 
+        if address_string.is_empty() {
+            return Err(ProviderError::InvalidAddressFormat);
+        }
+
+        if address_string == "Paris,z" {
+            return Err(ProviderError::InvalidCountryCode);
+        }
+
+        if address_string == "Paris,UU" {
+            return Err(ProviderError::Unauthorized);
+        }
+
         if address_string == "Paris,ZZ" {
             return Err(ProviderError::Unknown);
         }
@@ -35,6 +47,18 @@ impl Provider for DummyProvider {
     fn daily(&self, address_string: &str, _timestamp: i64) -> Result<Weather, ProviderError> {
         if !self.is_valid() {
             return Err(ProviderError::InvalidConfiguration);
+        }
+
+        if address_string.is_empty() {
+            return Err(ProviderError::InvalidAddressFormat);
+        }
+
+        if address_string == "Paris,z" {
+            return Err(ProviderError::InvalidCountryCode);
+        }
+
+        if address_string == "Paris,UU" {
+            return Err(ProviderError::Unauthorized);
         }
 
         if address_string == "Paris,ZZ" {

@@ -12,11 +12,11 @@ Common usage flow, would be as following:
 
         weather list-providers
 
-This command outputs list of available providers, which names you can use further within command line. Current provider names are: open_weather and weatherapi.
+This command outputs list of available providers, which names you can use further within command line. Current provider names are: `open_weather` and `weatherapi`.
 
 Next step would be to configure provider, for example:
 
-        weather configure openweather
+        weather configure open_weather
 
 User would be prompted to enter api key for the given provider.
 Next step would be to set current provider.

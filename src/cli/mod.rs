@@ -27,19 +27,13 @@ enum Commands {
     /// List available weather providers
     ListProviders {},
     /// Show configuration for selected provider
-    ShowProvider {
-        name: String,
-    },
+    ShowProvider { name: String },
     /// Set weather provider that will provide weather information
-    SetProvider {
-        name: String,
-    },
+    SetProvider { name: String },
     /// Show selected provider
     CurrentProvider {},
     /// Configure weather provider
-    Configure {
-        name: String,
-    },
+    Configure { name: String },
     /// Get weather information,
     Get {
         address: String,
@@ -63,7 +57,7 @@ pub fn run() {
     };
 
     match result {
-        Ok(()) => print!("\n"),
+        Ok(()) => println!("\n"),
         Err(CliError::MissingCurrentProvider) => println!("Please set a provider"),
         Err(CliError::InvalidProviderName) => println!("Invalid provider name"),
         Err(CliError::AddressNotFound) => println!("Address not found"),

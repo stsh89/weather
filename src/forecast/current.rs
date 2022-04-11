@@ -1,16 +1,9 @@
-use super::{ForecastError, Weather};
-use crate::providers::{Provider, ProviderError};
+use super::{process_provider_result, ForecastError, Weather};
+use crate::providers::Provider;
 
 pub fn run(provider: &dyn Provider, address_string: &str) -> Result<Weather, ForecastError> {
     let result = provider.current(address_string);
-
-    match result {
-        Ok(weather) => Ok(weather),
-        Err(ProviderError::Unknown) => Err(ForecastError::Unknown),
-        Err(ProviderError::InvalidConfiguration) => Err(ForecastError::ProviderIsNotValid),
-        Err(ProviderError::Unauthorized) => Err(ForecastError::UnauthorizedProvider),
-        Err(_) => Err(ForecastError::Unknown),
-    }
+    process_provider_result(result)
 }
 
 #[cfg(test)]
@@ -26,6 +19,30 @@ mod tests {
 
         match result {
             Err(ForecastError::Unknown) => {}
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn it_returns_unauthorized_error() {
+        let provider = DummyProvider::default();
+
+        let result = run(&provider, "Paris,UU");
+
+        match result {
+            Err(ForecastError::UnauthorizedProvider) => {}
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn it_returns_invalid_address_format_error() {
+        let provider = DummyProvider::default();
+
+        let result = run(&provider, "");
+
+        match result {
+            Err(ForecastError::InvalidAddressFormat) => {}
             _ => unreachable!(),
         }
     }

@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 
 use super::{CliApp, CliError, OpenWeatherConfig, ProviderConfig, WeatherapiConfig};
-use crate::forecast;
+use crate::forecast::{current, daily, ForecastError, Weather};
 use crate::geocode::OpenWeatherClient;
 use crate::providers::{OpenWeather, Provider, Weatherapi};
 
@@ -52,18 +52,8 @@ fn date_weather(
         Err(error) => return Err(error),
     };
 
-    let result = forecast::daily(provider, address_string, timestamp);
-
-    match result {
-        Ok(weather) => {
-            println!("Temperature: {}°C", weather.temperature);
-            Ok(())
-        },
-        Err(forecast::ForecastError::UnauthorizedProvider) => Err(CliError::ProviderIsNotConfigured),
-        Err(forecast::ForecastError::ProviderIsNotValid) => Err(CliError::ProviderIsNotConfigured),
-        Err(forecast::ForecastError::MissingRequestedDate) => Err(CliError::MissingRequestedDate),
-        Err(_) => Err(CliError::Unknown),
-    }
+    let result = daily(provider, address_string, timestamp);
+    process_forecast_result(result)
 }
 
 fn parse_date(date_string: &str) -> Result<i64, CliError> {
@@ -77,19 +67,22 @@ fn parse_date(date_string: &str) -> Result<i64, CliError> {
 }
 
 fn current_weather(provider: &dyn Provider, address_string: &str) -> Result<(), CliError> {
-    let result = forecast::current(provider, address_string);
+    let result = current(provider, address_string);
+    process_forecast_result(result)
+}
 
+fn process_forecast_result(result: Result<Weather, ForecastError>) -> Result<(), CliError> {
     match result {
         Ok(weather) => {
             println!("Temperature: {}°C", weather.temperature);
             Ok(())
-        },
-        Err(forecast::ForecastError::UnauthorizedProvider) => Err(CliError::ProviderIsNotConfigured),
-        Err(forecast::ForecastError::NoMatchingLocationFound) => Err(CliError::AddressNotFound),
-        Err(forecast::ForecastError::InvalidAddressFormat) => Err(CliError::InvalidAddressFormat),
-        Err(forecast::ForecastError::InvalidCountryCode) => Err(CliError::InvalidCountryCode),
-        Err(forecast::ForecastError::Unknown) => Err(CliError::Unknown),
-        Err(forecast::ForecastError::ProviderIsNotValid) => Err(CliError::ProviderIsNotConfigured),
-        Err(forecast::ForecastError::MissingRequestedDate) => Err(CliError::MissingRequestedDate),
+        }
+        Err(ForecastError::UnauthorizedProvider) => Err(CliError::ProviderIsNotConfigured),
+        Err(ForecastError::NoMatchingLocationFound) => Err(CliError::AddressNotFound),
+        Err(ForecastError::InvalidAddressFormat) => Err(CliError::InvalidAddressFormat),
+        Err(ForecastError::InvalidCountryCode) => Err(CliError::InvalidCountryCode),
+        Err(ForecastError::Unknown) => Err(CliError::Unknown),
+        Err(ForecastError::ProviderIsNotValid) => Err(CliError::ProviderIsNotConfigured),
+        Err(ForecastError::MissingRequestedDate) => Err(CliError::MissingRequestedDate),
     }
 }
