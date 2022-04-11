@@ -1,9 +1,11 @@
 pub enum CliError {
-    MissingCurrentProvider,
     AddressNotFound,
     InvalidAddressFormat,
     InvalidCountryCode,
-    Unknown,
+    InvalidDateFormat,
     InvalidProviderName,
+    MissingCurrentProvider,
+    MissingRequestedDate,
     UnauthorizedGeocodeClient,
+    Unknown,
 }

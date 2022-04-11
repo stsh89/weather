@@ -1,9 +1,11 @@
+use chrono::NaiveDateTime;
+
 use super::{CliApp, CliError, DummyProviderConfig, OpenWeatherConfig, ProviderConfig};
 use crate::forecast;
 use crate::geocode::{search_by_address, Address, Client, GeocodeError, Point};
 use crate::providers::{DummyProvider, OpenWeather, Provider};
 
-pub fn run(app: &CliApp, address_string: &str) -> Result<(), CliError> {
+pub fn run(app: &CliApp, address_string: &str, date: &Option<String>) -> Result<(), CliError> {
     let current_provider: &str = &app.config.current_provider;
     let provider: Box<dyn Provider> = match ProviderConfig::try_from(current_provider) {
         Ok(ProviderConfig::DummyProviderConfig) => dummy_provider(&app.config.providers.dummy),
@@ -29,7 +31,7 @@ pub fn run(app: &CliApp, address_string: &str) -> Result<(), CliError> {
         longitude: point.longitude,
     };
 
-    get_weather(&*provider, &request)
+    get_weather(&*provider, &request, date)
 }
 
 fn parse_address(address_string: &str) -> Result<Address, CliError> {
@@ -72,8 +74,51 @@ fn open_weather(config: &OpenWeatherConfig) -> Box<dyn Provider> {
     })
 }
 
-fn get_weather(provider: &dyn Provider, request: &forecast::Request) -> Result<(), CliError> {
-    let result = forecast::show(provider, request);
+fn get_weather(
+    provider: &dyn Provider,
+    request: &forecast::Request,
+    date: &Option<String>,
+) -> Result<(), CliError> {
+    match date {
+        Some(date_string) => date_weather(provider, request, date_string),
+        None => current_weather(provider, request),
+    }
+}
+
+fn date_weather(
+    provider: &dyn Provider,
+    request: &forecast::Request,
+    date_string: &str,
+) -> Result<(), CliError> {
+    let timestamp = match parse_date(date_string) {
+        Ok(value) => value,
+        Err(error) => return Err(error),
+    };
+
+    let result = forecast::daily(provider, request, timestamp);
+
+    match result {
+        Ok(weather) => {
+            println!("Temperature: {}°C", weather.temperature);
+            Ok(())
+        }
+        Err(forecast::ForecastError::MissingRequestedDate) => Err(CliError::MissingRequestedDate),
+        Err(_) => Err(CliError::Unknown),
+    }
+}
+
+fn parse_date(date_string: &str) -> Result<i64, CliError> {
+    let parse_result =
+        NaiveDateTime::parse_from_str(&format!("{} 00:00:00", date_string), "%Y-%m-%d %H:%M:%S");
+
+    match parse_result {
+        Ok(date) => Ok(date.timestamp()),
+        Err(_) => Err(CliError::InvalidDateFormat),
+    }
+}
+
+fn current_weather(provider: &dyn Provider, request: &forecast::Request) -> Result<(), CliError> {
+    let result = forecast::current(provider, request);
 
     match result {
         Ok(weather) => {

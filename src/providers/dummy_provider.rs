@@ -12,7 +12,7 @@ pub struct DummyProvider {
 }
 
 impl Provider for DummyProvider {
-    fn provide(&self, latitude: f64, longitude: f64) -> Result<Weather, ProviderError> {
+    fn current(&self, latitude: f64, longitude: f64) -> Result<Weather, ProviderError> {
         if !self.is_valid() {
             return Err(ProviderError::InvalidConfiguration);
         }
@@ -23,6 +23,30 @@ impl Provider for DummyProvider {
 
         if latitude == 0.1 && longitude == 0.1 {
             return Ok(Weather { temperature: 10.22 });
+        }
+
+        Ok(Weather { temperature: 10.22 })
+    }
+
+    fn daily(
+        &self,
+        latitude: f64,
+        longitude: f64,
+        _timestamp: i64,
+    ) -> Result<Weather, ProviderError> {
+        if !self.is_valid() {
+            return Err(ProviderError::InvalidConfiguration);
+        }
+        if latitude == 0.0 && longitude == 0.0 {
+            return Err(ProviderError::Unknown);
+        }
+
+        if latitude == 0.1 && longitude == 0.1 {
+            return Ok(Weather { temperature: 10.22 });
+        }
+
+        if latitude == 0.2 && longitude == 0.2 {
+            return Err(ProviderError::MissingRequestedDate);
         }
 
         Ok(Weather { temperature: 10.22 })

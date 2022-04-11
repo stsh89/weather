@@ -29,11 +29,20 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     ListProviders {},
-    ShowProvider { name: String },
-    SetProvider { name: String },
+    ShowProvider {
+        name: String,
+    },
+    SetProvider {
+        name: String,
+    },
     CurrentProvider {},
-    Configure { name: String },
-    Get { address: String },
+    Configure {
+        name: String,
+    },
+    Get {
+        address: String,
+        date: Option<String>,
+    },
 }
 
 pub fn run() {
@@ -58,7 +67,7 @@ pub fn run() {
         Commands::SetProvider { name } => set_provider::run(app.config, name),
         Commands::CurrentProvider {} => current_provider::run(&app.config),
         Commands::Configure { name } => configure_provider::run(app.config, name),
-        Commands::Get { address } => get_weather::run(&app, address),
+        Commands::Get { address, date } => get_weather::run(&app, address, date),
     };
 
     match result {
@@ -70,5 +79,7 @@ pub fn run() {
         Err(CliError::Unknown) => println!("Unknown error occured, please try again later."),
         Err(CliError::InvalidCountryCode) => println!("Invalid country code, it consists of two chars, check ISO 3166 for more infomation."),
         Err(CliError::UnauthorizedGeocodeClient) => println!("Unauthorized geocode client, please check if GEOCODE_API_KEY is valid."),
+        Err(CliError::InvalidDateFormat) => println!("Invalid date format, date should be in a format of Y-m-d, for example 2022-04-11"),
+        Err(CliError::MissingRequestedDate) => println!("Missing forecast for requested date"),
     }
 }
