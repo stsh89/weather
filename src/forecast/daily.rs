@@ -1,18 +1,21 @@
-use super::{ForecastError, Request, Weather};
+use super::{ForecastError, Weather};
 use crate::providers::{Provider, ProviderError};
 
 pub fn run(
     provider: &dyn Provider,
-    request: &Request,
+    address_string: &str,
     timestamp: i64,
 ) -> Result<Weather, ForecastError> {
-    let result = provider.daily(request.latitude, request.longitude, timestamp);
+    let result = provider.daily(address_string, timestamp);
 
     match result {
         Ok(weather) => Ok(weather),
         Err(ProviderError::Unknown) => Err(ForecastError::Unknown),
         Err(ProviderError::InvalidConfiguration) => Err(ForecastError::ProviderIsNotValid),
         Err(ProviderError::MissingRequestedDate) => Err(ForecastError::MissingRequestedDate),
+        Err(ProviderError::NoMatchingLocationFound) => Err(ForecastError::NoMatchingLocationFound),
+        Err(ProviderError::InvalidAddressFormat) => Err(ForecastError::InvalidAddressFormat),
+        Err(ProviderError::InvalidCountryCode) => Err(ForecastError::InvalidCountryCode),
     }
 }
 
@@ -25,11 +28,7 @@ mod tests {
     fn it_returns_unknown_error() {
         let timestamp = 0;
         let provider = DummyProvider::default();
-        let request = Request {
-            latitude: 0.0,
-            longitude: 0.0,
-        };
-        let result = run(&provider, &request, timestamp);
+        let result = run(&provider, "Paris,ZZ", timestamp);
 
         match result {
             Err(ForecastError::Unknown) => {}
@@ -44,12 +43,8 @@ mod tests {
             latitude: None,
             longitude: None,
         };
-        let request = Request {
-            latitude: 0.0,
-            longitude: 0.0,
-        };
 
-        let result = run(&provider, &request, timestamp);
+        let result = run(&provider, "", timestamp);
 
         match result {
             Err(ForecastError::ProviderIsNotValid) => {}
@@ -61,11 +56,7 @@ mod tests {
     fn it_returns_missing_requested_date_erro() {
         let timestamp = 0;
         let provider = DummyProvider::default();
-        let request = Request {
-            latitude: 0.2,
-            longitude: 0.2,
-        };
-        let result = run(&provider, &request, timestamp);
+        let result = run(&provider, "Paris,YY", timestamp);
 
         match result {
             Err(ForecastError::MissingRequestedDate) => {}
@@ -77,11 +68,7 @@ mod tests {
     fn it_returns_weather() {
         let timestamp = 0;
         let provider = DummyProvider::default();
-        let request = Request {
-            latitude: 0.1,
-            longitude: 0.1,
-        };
-        let result = run(&provider, &request, timestamp);
+        let result = run(&provider, "Paris,FR", timestamp);
         let want = Weather { temperature: 10.22 };
 
         match result {

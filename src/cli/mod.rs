@@ -8,15 +8,11 @@ mod list_providers;
 mod set_provider;
 mod show_provider;
 
-use crate::geocode::OpenWeatherClient;
-
 use cli_app::CliApp;
 use cli_error::CliError;
 
 use clap::{Parser, Subcommand};
-use config::{Config, DummyProviderConfig, OpenWeatherConfig, ProviderConfig};
-
-use std::env;
+use config::{Config, DummyProviderConfig, OpenWeatherConfig, ProviderConfig, WeatherapiConfig};
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -46,18 +42,8 @@ enum Commands {
 }
 
 pub fn run() {
-    let geocode_api_key = "GEOCODE_API_KEY";
-    let appid = match env::var(geocode_api_key) {
-        Ok(v) => v,
-        Err(e) => panic!("${} is not set ({})", geocode_api_key, e),
-    };
-
     let config = Config::read();
-    let geocode_client = Box::new(OpenWeatherClient { appid });
-    let app = CliApp {
-        config,
-        geocode_client,
-    };
+    let app = CliApp { config };
 
     let cli = Cli::parse();
 
@@ -78,8 +64,7 @@ pub fn run() {
         Err(CliError::InvalidAddressFormat) => println!("Invalid address format, it should be in a format of CITY,COUNTRY_ALPHA_2_CODE, for example Paris,FR"),
         Err(CliError::Unknown) => println!("Unknown error occured, please try again later."),
         Err(CliError::InvalidCountryCode) => println!("Invalid country code, it consists of two chars, check ISO 3166 for more infomation."),
-        Err(CliError::UnauthorizedGeocodeClient) => println!("Unauthorized geocode client, please check if GEOCODE_API_KEY is valid."),
-        Err(CliError::InvalidDateFormat) => println!("Invalid date format, date should be in a format of Y-m-d, for example 2022-04-11"),
+        Err(CliError::InvalidDateFormat) => println!("Invalid date format, date should be in a format of Yyyy-mm-dd, for example 2022-04-11"),
         Err(CliError::MissingRequestedDate) => println!("Missing forecast for requested date"),
     }
 }
