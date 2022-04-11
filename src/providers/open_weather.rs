@@ -43,24 +43,9 @@ impl Provider for OpenWeather {
             return Err(ProviderError::InvalidConfiguration);
         }
 
-        let address: Address = match parse_address(address_string) {
-            Ok(address) => address,
-            Err(GeocodeError::InvalidAddressFormat) => {
-                return Err(ProviderError::InvalidAddressFormat)
-            }
-            Err(GeocodeError::InvalidCountryCode) => return Err(ProviderError::InvalidCountryCode),
-            _ => return Err(ProviderError::Unknown),
-        };
-
-        let point: Point = match search_by_address(&*self.geocode_client, &address) {
+        let point = match self.geocode(address_string) {
             Ok(point) => point,
-            Err(GeocodeError::NotFound) => return Err(ProviderError::NoMatchingLocationFound),
-            Err(GeocodeError::NothingToGeocode) => {
-                return Err(ProviderError::NoMatchingLocationFound)
-            }
-            Err(GeocodeError::Unknown) => return Err(ProviderError::Unknown),
-            Err(GeocodeError::UnauthorizedClient) => return Err(ProviderError::Unknown),
-            _ => return Err(ProviderError::Unknown),
+            Err(error) => return Err(error),
         };
 
         let client = reqwest::blocking::Client::new();
@@ -91,24 +76,9 @@ impl Provider for OpenWeather {
             return Err(ProviderError::InvalidConfiguration);
         }
 
-        let address: Address = match parse_address(address_string) {
-            Ok(address) => address,
-            Err(GeocodeError::InvalidAddressFormat) => {
-                return Err(ProviderError::InvalidAddressFormat)
-            }
-            Err(GeocodeError::InvalidCountryCode) => return Err(ProviderError::InvalidCountryCode),
-            _ => return Err(ProviderError::Unknown),
-        };
-
-        let point: Point = match search_by_address(&*self.geocode_client, &address) {
+        let point = match self.geocode(address_string) {
             Ok(point) => point,
-            Err(GeocodeError::NotFound) => return Err(ProviderError::NoMatchingLocationFound),
-            Err(GeocodeError::NothingToGeocode) => {
-                return Err(ProviderError::NoMatchingLocationFound)
-            }
-            Err(GeocodeError::Unknown) => return Err(ProviderError::Unknown),
-            Err(GeocodeError::UnauthorizedClient) => return Err(ProviderError::Unknown),
-            _ => return Err(ProviderError::Unknown),
+            Err(error) => return Err(error),
         };
 
         let client = reqwest::blocking::Client::new();
@@ -151,5 +121,27 @@ impl Provider for OpenWeather {
 
     fn is_valid(&self) -> bool {
         self.appid.is_some()
+    }
+}
+
+impl OpenWeather {
+    fn geocode(&self, address_string: &str) -> Result<Point, ProviderError> {
+        let address: Address = match parse_address(address_string) {
+            Ok(address) => address,
+            Err(GeocodeError::InvalidAddressFormat) => {
+                return Err(ProviderError::InvalidAddressFormat)
+            }
+            Err(GeocodeError::InvalidCountryCode) => return Err(ProviderError::InvalidCountryCode),
+            _ => return Err(ProviderError::Unknown),
+        };
+
+        match search_by_address(&*self.geocode_client, &address) {
+            Ok(point) => Ok(point),
+            Err(GeocodeError::NotFound) => Err(ProviderError::NoMatchingLocationFound),
+            Err(GeocodeError::NothingToGeocode) => Err(ProviderError::NoMatchingLocationFound),
+            Err(GeocodeError::Unknown) => Err(ProviderError::Unknown),
+            Err(GeocodeError::UnauthorizedClient) => Err(ProviderError::Unknown),
+            _ => Err(ProviderError::Unknown),
+        }
     }
 }
