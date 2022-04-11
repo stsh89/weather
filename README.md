@@ -21,7 +21,7 @@ Next step would be to configure provider, for example:
 User would be prompted to enter api key for the given provider.
 Next step would be to set current provider.
 
-        weather set-provider openweather
+        weather set-provider open_weather
 
 Which can be verified by
 
