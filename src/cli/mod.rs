@@ -12,7 +12,7 @@ use cli_app::CliApp;
 use cli_error::CliError;
 
 use clap::{Parser, Subcommand};
-use config::{Config, DummyProviderConfig, OpenWeatherConfig, ProviderConfig, WeatherapiConfig};
+use config::{Config, OpenWeatherConfig, ProviderConfig, WeatherapiConfig};
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -24,17 +24,23 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// List available weather providers
     ListProviders {},
+    /// Show configuration for selected provider
     ShowProvider {
         name: String,
     },
+    /// Set weather provider that will provide weather information
     SetProvider {
         name: String,
     },
+    /// Show selected provider
     CurrentProvider {},
+    /// Configure weather provider
     Configure {
         name: String,
     },
+    /// Get weather information,
     Get {
         address: String,
         date: Option<String>,
@@ -57,7 +63,7 @@ pub fn run() {
     };
 
     match result {
-        Ok(()) => println!("Done!"),
+        Ok(()) => print!("\n"),
         Err(CliError::MissingCurrentProvider) => println!("Please set a provider"),
         Err(CliError::InvalidProviderName) => println!("Invalid provider name"),
         Err(CliError::AddressNotFound) => println!("Address not found"),
@@ -66,5 +72,6 @@ pub fn run() {
         Err(CliError::InvalidCountryCode) => println!("Invalid country code, it consists of two chars, check ISO 3166 for more infomation."),
         Err(CliError::InvalidDateFormat) => println!("Invalid date format, date should be in a format of Yyyy-mm-dd, for example 2022-04-11"),
         Err(CliError::MissingRequestedDate) => println!("Missing forecast for requested date"),
+        Err(CliError::ProviderIsNotConfigured) => println!("You should configure provider"),
     }
 }

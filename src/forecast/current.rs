@@ -8,6 +8,7 @@ pub fn run(provider: &dyn Provider, address_string: &str) -> Result<Weather, For
         Ok(weather) => Ok(weather),
         Err(ProviderError::Unknown) => Err(ForecastError::Unknown),
         Err(ProviderError::InvalidConfiguration) => Err(ForecastError::ProviderIsNotValid),
+        Err(ProviderError::Unauthorized) => Err(ForecastError::UnauthorizedProvider),
         Err(_) => Err(ForecastError::Unknown),
     }
 }

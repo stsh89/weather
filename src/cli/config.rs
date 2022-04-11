@@ -1,12 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct DummyProviderConfig {
-    pub latitude: f64,
-    pub longitude: f64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub struct OpenWeatherConfig {
     pub appid: String,
 }
@@ -18,7 +12,6 @@ pub struct WeatherapiConfig {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ProvidersConfig {
-    pub dummy: DummyProviderConfig,
     pub open_weather: OpenWeatherConfig,
     pub weatherapi: WeatherapiConfig,
 }
@@ -27,15 +20,6 @@ pub struct ProvidersConfig {
 pub struct Config {
     pub current_provider: String,
     pub providers: ProvidersConfig,
-}
-
-impl Default for DummyProviderConfig {
-    fn default() -> Self {
-        DummyProviderConfig {
-            latitude: 0.0,
-            longitude: 0.0,
-        }
-    }
 }
 
 impl Default for OpenWeatherConfig {
@@ -57,7 +41,7 @@ impl Default for WeatherapiConfig {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            current_provider: String::from(ProviderConfig::DummyProvider),
+            current_provider: String::from(ProviderConfig::OpenWeather),
             providers: ProvidersConfig::default(),
         }
     }
@@ -65,7 +49,6 @@ impl Default for Config {
 
 #[derive(Debug)]
 pub enum ProviderConfig {
-    DummyProvider,
     OpenWeather,
     Weatherapi,
 }
@@ -73,7 +56,6 @@ pub enum ProviderConfig {
 impl From<ProviderConfig> for String {
     fn from(t: ProviderConfig) -> Self {
         String::from(match t {
-            ProviderConfig::DummyProvider => "dummy",
             ProviderConfig::OpenWeather => "open_weather",
             ProviderConfig::Weatherapi => "weatherapi",
         })
@@ -85,7 +67,6 @@ impl TryFrom<&str> for ProviderConfig {
 
     fn try_from(t: &str) -> Result<Self, Self::Error> {
         match t {
-            "dummy" => Ok(Self::DummyProvider),
             "open_weather" => Ok(Self::OpenWeather),
             "weatherapi" => Ok(Self::Weatherapi),
             _ => Err(()),

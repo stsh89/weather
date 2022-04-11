@@ -60,6 +60,7 @@ impl Provider for Weatherapi {
                     }),
                     Err(_error) => Err(ProviderError::Unknown),
                 },
+                reqwest::StatusCode::UNAUTHORIZED => Err(ProviderError::Unauthorized),
                 reqwest::StatusCode::BAD_REQUEST => Err(ProviderError::NoMatchingLocationFound),
                 _ => Err(ProviderError::Unknown),
             },
@@ -103,6 +104,7 @@ impl Provider for Weatherapi {
                     }
                     Err(_) => Err(ProviderError::Unknown),
                 },
+                reqwest::StatusCode::UNAUTHORIZED => Err(ProviderError::Unauthorized),
                 reqwest::StatusCode::BAD_REQUEST => Err(ProviderError::NoMatchingLocationFound),
                 _ => Err(ProviderError::Unknown),
             },

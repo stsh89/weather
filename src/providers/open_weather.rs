@@ -113,6 +113,7 @@ impl Provider for OpenWeather {
                     }
                     Err(_error) => Err(ProviderError::Unknown),
                 },
+                reqwest::StatusCode::UNAUTHORIZED => Err(ProviderError::Unauthorized),
                 _ => Err(ProviderError::Unknown),
             },
             Err(_error) => Err(ProviderError::Unknown),
@@ -135,12 +136,14 @@ impl OpenWeather {
             _ => return Err(ProviderError::Unknown),
         };
 
-        match search_by_address(&*self.geocode_client, &address) {
+        let result = search_by_address(&*self.geocode_client, &address);
+
+        match result {
             Ok(point) => Ok(point),
             Err(GeocodeError::NotFound) => Err(ProviderError::NoMatchingLocationFound),
             Err(GeocodeError::NothingToGeocode) => Err(ProviderError::NoMatchingLocationFound),
             Err(GeocodeError::Unknown) => Err(ProviderError::Unknown),
-            Err(GeocodeError::UnauthorizedClient) => Err(ProviderError::Unknown),
+            Err(GeocodeError::UnauthorizedClient) => Err(ProviderError::Unauthorized),
             _ => Err(ProviderError::Unknown),
         }
     }

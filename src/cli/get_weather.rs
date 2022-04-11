@@ -1,29 +1,19 @@
 use chrono::NaiveDateTime;
 
-use super::{
-    CliApp, CliError, DummyProviderConfig, OpenWeatherConfig, ProviderConfig, WeatherapiConfig,
-};
+use super::{CliApp, CliError, OpenWeatherConfig, ProviderConfig, WeatherapiConfig};
 use crate::forecast;
 use crate::geocode::OpenWeatherClient;
-use crate::providers::{DummyProvider, OpenWeather, Provider, Weatherapi};
+use crate::providers::{OpenWeather, Provider, Weatherapi};
 
 pub fn run(app: &CliApp, address_string: &str, date: &Option<String>) -> Result<(), CliError> {
     let current_provider: &str = &app.config.current_provider;
     let provider: Box<dyn Provider> = match ProviderConfig::try_from(current_provider) {
-        Ok(ProviderConfig::DummyProvider) => dummy_provider(&app.config.providers.dummy),
         Ok(ProviderConfig::OpenWeather) => open_weather(&app.config.providers.open_weather),
         Ok(ProviderConfig::Weatherapi) => weatherapi(&app.config.providers.weatherapi),
         Err(_) => return Err(CliError::MissingCurrentProvider),
     };
 
     get_weather(&*provider, address_string, date)
-}
-
-fn dummy_provider(config: &DummyProviderConfig) -> Box<dyn Provider> {
-    Box::new(DummyProvider {
-        latitude: Some(config.latitude),
-        longitude: Some(config.longitude),
-    })
 }
 
 fn open_weather(config: &OpenWeatherConfig) -> Box<dyn Provider> {
@@ -68,7 +58,9 @@ fn date_weather(
         Ok(weather) => {
             println!("Temperature: {}°C", weather.temperature);
             Ok(())
-        }
+        },
+        Err(forecast::ForecastError::UnauthorizedProvider) => Err(CliError::ProviderIsNotConfigured),
+        Err(forecast::ForecastError::ProviderIsNotValid) => Err(CliError::ProviderIsNotConfigured),
         Err(forecast::ForecastError::MissingRequestedDate) => Err(CliError::MissingRequestedDate),
         Err(_) => Err(CliError::Unknown),
     }
@@ -91,12 +83,13 @@ fn current_weather(provider: &dyn Provider, address_string: &str) -> Result<(), 
         Ok(weather) => {
             println!("Temperature: {}°C", weather.temperature);
             Ok(())
-        }
+        },
+        Err(forecast::ForecastError::UnauthorizedProvider) => Err(CliError::ProviderIsNotConfigured),
         Err(forecast::ForecastError::NoMatchingLocationFound) => Err(CliError::AddressNotFound),
         Err(forecast::ForecastError::InvalidAddressFormat) => Err(CliError::InvalidAddressFormat),
         Err(forecast::ForecastError::InvalidCountryCode) => Err(CliError::InvalidCountryCode),
         Err(forecast::ForecastError::Unknown) => Err(CliError::Unknown),
-        Err(forecast::ForecastError::ProviderIsNotValid) => Err(CliError::Unknown),
+        Err(forecast::ForecastError::ProviderIsNotValid) => Err(CliError::ProviderIsNotConfigured),
         Err(forecast::ForecastError::MissingRequestedDate) => Err(CliError::MissingRequestedDate),
     }
 }

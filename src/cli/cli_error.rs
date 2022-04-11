@@ -6,5 +6,6 @@ pub enum CliError {
     InvalidProviderName,
     MissingCurrentProvider,
     MissingRequestedDate,
+    ProviderIsNotConfigured,
     Unknown,
 }
