@@ -27,7 +27,7 @@ Which can be verified by
 
         weather current-provider
 
-After configuration and setting provider, user can get actuall weather data, for example following command would show temperature for France now:
+After configuration and setting provider, user can get actual weather data, for example following command would show temperature for France now:
 
         weather get Paris,FR
 
