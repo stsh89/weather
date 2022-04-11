@@ -16,4 +16,3 @@ pub use point::Point;
 pub use search_by_address::run as search_by_address;
 
 use client::ClientResponse;
-// use dummy_client::DummyClient;
