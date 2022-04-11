@@ -64,11 +64,11 @@ impl From<ProviderConfig> for String {
     }
 }
 
-impl TryFrom<String> for ProviderConfig {
+impl TryFrom<&str> for ProviderConfig {
     type Error = ();
 
-    fn try_from(t: String) -> Result<Self, Self::Error> {
-        match t.as_str() {
+    fn try_from(t: &str) -> Result<Self, Self::Error> {
+        match t {
             "dummy" => Ok(Self::DummyProviderConfig),
             "open_weather" => Ok(Self::OpenWeatherConfig),
             _ => Err(()),
@@ -86,7 +86,7 @@ impl Config {
         }
     }
 
-    pub fn write(self) {
+    pub fn write(&self) {
         match confy::store(CONFIG_NAME, self) {
             Ok(_) => (),
             Err(error) => panic!("{:?}", error),

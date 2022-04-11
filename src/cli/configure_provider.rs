@@ -1,15 +1,20 @@
-use super::{Config, DummyProviderConfig, OpenWeatherConfig, ProviderConfig};
+use super::{CliError, Config, DummyProviderConfig, OpenWeatherConfig, ProviderConfig};
 use dialoguer::Input;
 
-pub fn run(config: Config, name: &str) {
-    match ProviderConfig::try_from(name.to_string()) {
+pub fn run(config: Config, name: &str) -> Result<(), CliError> {
+    let result = match ProviderConfig::try_from(name) {
         Ok(ProviderConfig::DummyProviderConfig) => dummy_provider(config),
         Ok(ProviderConfig::OpenWeatherConfig) => open_weather(config),
-        Err(_) => println!("Invalid provider name"),
+        Err(_) => return Err(CliError::InvalidProviderName),
+    };
+
+    match result {
+        Ok(_) => Ok(()),
+        Err(error) => Err(error),
     }
 }
 
-fn dummy_provider(mut config: Config) {
+fn dummy_provider(mut config: Config) -> Result<Config, CliError> {
     let latitude: f64 = Input::new()
         .with_prompt("latitude")
         .interact_text()
@@ -26,10 +31,12 @@ fn dummy_provider(mut config: Config) {
     };
 
     config.write();
+    Ok(config)
 }
 
-fn open_weather(mut config: Config) {
+fn open_weather(mut config: Config) -> Result<Config, CliError> {
     let appid: String = Input::new().with_prompt("appid").interact_text().unwrap();
     config.providers.open_weather = OpenWeatherConfig { appid };
     config.write();
+    Ok(config)
 }
